@@ -2,7 +2,21 @@
 
 Team Up is a mod for Mystical Ninja Starring Goemon: Recompiled. This repository is based on the MNSG recomp mod template and is configured to produce `mnsg_team_up.nrm`.
 
-Example code for using the recompui API to build ingame UI can be found in the `ui-example` branch.
+The mod renders every unlocked character other than the currently controlled character as a cutscene-style companion. Goemon, Ebisumaru, Sasuke, and Yae use their clothed gameplay models and follow in a small formation behind the player.
+
+When the player changes character, Team Up preserves the selected companion's formation slot and rebinds that slot to the previous playable character. The handoff waits for the game's deferred character-load action (`0xBA`) to finish, avoiding a duplicate model during the transition.
+
+Companions are visual followers, not additional playable actors. They do not receive controller input, collide, fight, take damage, drive the camera, or modify story state.
+
+### Implementation
+
+- Character availability is read from the four 32-bit save fields at offsets `0x94`, `0x98`, `0x9C`, and `0xA0`.
+- Broad character resources and raw action-model files are staged from the gameplay stage-load hook.
+- Each follower is an independent kind-2 model object under a plain child task, matching the game's cutscene actor architecture.
+- Followers mirror the active player's action id, animation phase, and rotations while interpolating toward a 78-to-128-unit formation.
+- The implementation is entirely C and uses no Python runtime or native library.
+
+See [docs/implementation.md](docs/implementation.md) for the Ghidra-backed model/resource path, lifecycle rules, and current render-only boundary.
 
 ### Writing mods
 See [this document](https://hackmd.io/fMDiGEJ9TBSjomuZZOgzNg) for an explanation of the modding framework, including how to write function patches and perform interop between different mods.

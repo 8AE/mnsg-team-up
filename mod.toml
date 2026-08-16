@@ -22,7 +22,7 @@ Team Up for Mystical Ninja Starring Goemon: Recompiled."""
 short_description = "Team Up for Mystical Ninja Starring Goemon: Recompiled."
 
 # Authors of this mod.
-authors = ["Ahmad El-Baba"]
+authors = ["Killzbro"]
 
 # ID of the target recomp game.
 game_id = "mnsg"
@@ -32,14 +32,14 @@ minimum_recomp_version = "0.1.0"
 
 # Dependency mods. Each entry is the mod's ID and then an optional minimum version of the dependency mod.
 dependencies = [
-# Example dependency:
-#    "modname:1.0.0"
+    # Example dependency:
+    #    "modname:1.0.0"
 ]
 
 # Native libraries (e.g. DLLs) and the functions they export.
 native_libraries = [
-# Example native library:
-#    { name = "my_native_library", funcs = ["my_native_library_function"] }
+    # Example native library:
+    #    { name = "my_native_library", funcs = ["my_native_library_function"] }
 ]
 
 # Inputs to the mod tool.
@@ -53,7 +53,7 @@ mod_filename = "mnsg_team_up"
 
 # Reference symbol files.
 func_reference_syms_file = "Goemon64RecompSyms/mnsg.us.syms.toml"
-data_reference_syms_files = [ "Goemon64RecompSyms/mnsg.us.datasyms.toml" ]
+data_reference_syms_files = ["Goemon64RecompSyms/mnsg.us.datasyms.toml"]
 
 # Additional files to include in the mod.
 additional_files = []
