@@ -7,9 +7,9 @@ typedef struct TeamUpFollowerModel
 {
     int cid;
     int ch;
-    int x;
-    int y;
-    int z;
+    float x;
+    float y;
+    float z;
     int vx;
     int vy;
     int vz;
@@ -20,6 +20,9 @@ typedef struct TeamUpFollowerModel
     int rot_x;
     int rot_y;
     int rot_z;
+    int sync_animation;
+    int sync_rotation;
+    int animation_step_100;
     int same_team;
 } TeamUpFollowerModel;
 

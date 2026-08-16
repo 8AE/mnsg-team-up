@@ -11,7 +11,15 @@ Team Up maintains three stable companion slots. On each gameplay frame it reads 
 | 2 | Sasuke |
 | 3 | Yae |
 
-One companion stands about 78 world units behind the player. Two use left/right offsets at the same distance. With all four characters unlocked, the third follower occupies the center at about 128 units. Position and height are interpolated; a follower snaps back into formation after a warp or a displacement greater than 300 world units.
+The followers use a compact formation 16 to 22 world units behind the player, with a 10-unit side offset for the first two slots. Those are destination points, not fixed transforms: every follower owns its own position, velocity, facing, and locomotion state.
+
+The per-follower state machine has three states:
+
+- `WALKING`: while close to the player, move toward the assigned trailing point at 1.25 units per frame, bind the game's walking action `0x0D`, and advance it by 0.75 animation frames per update. A settled follower binds idle action `0`.
+- `RUNNING`: after distance from the player exceeds 32 units, move at 4.5 units per frame, bind the full-run action `0x0F`, and advance it by 1.70 frames per update. It returns to `WALKING` at 25 units, providing transition hysteresis.
+- `JUMPING`: while Player 1's task action is `0x17`, `0x18`, `0x19`, or the continuing fall loop `0x1A`, apply Player 1's exact vertical displacement since takeoff and bind the corresponding airborne action for the follower's own character. The player's normalized animation phase is mapped to the follower clip, and the grounded `0x1B`/`0x1C` actions return the follower to `WALKING` or `RUNNING` based on distance.
+
+Distance is measured in three dimensions. If it exceeds 50 units, the follower is immediately teleported to its assigned point behind the player and reset to `WALKING`, or kept in `JUMPING` while Player 1 is airborne. A second post-movement leash check makes 50 units a hard invariant rather than an approximate snap threshold.
 
 When the active character changes, the selected companion's slot is rebound to the previous active character without clearing that slot's position. `FUN_801DD5C0` writes the new character immediately but leaves the player in action `0xBA` while `FUN_801E0944` performs the deferred resource load. Team Up waits until action `0xBA` ends before committing the role handoff.
 
@@ -40,7 +48,18 @@ No playable constructor, player-manager slot, controller callback, action behavi
 
 ## Current boundary
 
-Followers are render-only. Their target formation does not run room collision or pathfinding, so they can visually pass through narrow geometry before interpolation or the distance snap catches up. They copy the active player's action and animation phase; this keeps the four character action tables synchronized but means a follower correcting its position while the player is idle may move briefly on an idle pose.
+Followers are render-only. Their movement state machine does not run room collision or pathfinding, so they can visually pass through narrow geometry before the 50-unit leash teleports them behind the player. They do not copy the active player's ordinary action, animation phase, or rotation. Ghidra shows `FUN_801E1C90` selecting the actual ground-locomotion actions `0x0C` through `0x0F` and `FUN_801E3400` binding that selection while the player moves. Team Up uses `0x0D` for walking, `0x0F` for running, and action `0` only when a companion has settled. Walking and running use explicit AI-owned frame steps rather than the playable task's dynamic rate adjustment.
+
+The player task map used by the AI is:
+
+| Address | Role |
+| --- | --- |
+| `0x801FC600` | Player Manager task pointer |
+| `0x801FC604` | Player 1 task pointer; action byte at task `+0xCC` |
+| `0x801FC60C` | Player 1 display object pointer; position at `+0x08..+0x10` |
+| `0x801FC614` | Player 1 parent object pointer |
+
+Ghidra shows `FUN_801E20A0` initiating a normal jump before action `0x17`, `FUN_801E8194` advancing through `0x18`/`0x19`, and `FUN_801DF234` selecting airborne fall loop `0x1A`. `FUN_801DF120` keeps `0x1A` active until the grounded transition to `0x1B`/`0x1C`. Team Up reads those actions plus Player 1's object height and animation phase, but never calls the player's behavior callbacks on a companion.
 
 The main implementation files are:
 

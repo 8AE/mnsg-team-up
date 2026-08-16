@@ -882,14 +882,44 @@ static void update_slot_pose(RemoteModelSlot *slot, const TeamUpFollowerModel *r
     unsigned char *entry;
     float frame_count;
     int new_remote_packet = remote->seq != slot->last_seq;
-    int use_remote_anim = remote->action == slot->bound_action &&
+    int use_remote_anim = remote->sync_animation &&
+                          remote->action == slot->bound_action &&
                           remote->action >= 0 &&
                           remote->action < REMOTE_PLAYER_ACTION_MAX;
+    int use_remote_rotation = remote->sync_rotation;
 
-    if (!use_remote_anim)
+    if (!use_remote_rotation)
         slot->yaw = yaw_from_velocity(remote->vx, remote->vz, slot->yaw);
 
-    slot->frame += slot->frame_step;
+    entry = get_action_entry(slot->bound_ch, slot->bound_action);
+    if (!entry)
+    {
+        hide_object(slot->object);
+        slot->bound_action = -1;
+        return;
+    }
+
+    if (use_remote_anim)
+    {
+        slot->frame += slot->frame_step;
+    }
+    else
+    {
+        int animation_step_100 = remote->animation_step_100;
+
+        if (animation_step_100 < 0)
+            animation_step_100 = 0;
+        else if (animation_step_100 > 300)
+            animation_step_100 = 300;
+
+        /* AI locomotion supplies an absolute frames-per-update step instead
+         * of depending on the playable task's dynamic rate adjustment. */
+        slot->frame_step = (float)animation_step_100 / 100.0f;
+        if (animation_step_100 == 0)
+            slot->frame = 0.0f;
+        else
+            slot->frame += slot->frame_step;
+    }
     /* Resolve the bound clip length through the engine because its model
      * command pointer is segmented and cannot be dereferenced directly. */
     frame_count = func_8001B5AC_1C1AC(slot->object);
@@ -943,8 +973,7 @@ static void update_slot_pose(RemoteModelSlot *slot, const TeamUpFollowerModel *r
         slot->frame = 0.0f;
     }
 
-    entry = get_action_entry(slot->bound_ch, slot->bound_action);
-    if (!entry || !sync_timed_aux_resources(slot, entry, slot->frame))
+    if (!sync_timed_aux_resources(slot, entry, slot->frame))
     {
         /* Keep a model with incomplete face segments hidden so corrupt display
          * data is never submitted while an aux load or table check fails. */
@@ -956,7 +985,7 @@ static void update_slot_pose(RemoteModelSlot *slot, const TeamUpFollowerModel *r
     write_float_at(slot->object, 0x08, (float)remote->x);
     write_float_at(slot->object, 0x0c, (float)remote->y);
     write_float_at(slot->object, 0x10, (float)remote->z);
-    if (use_remote_anim)
+    if (use_remote_rotation)
     {
         write_u16_at(slot->object, 0x14, (unsigned short)remote->rot_x);
         write_u16_at(slot->object, 0x16, (unsigned short)remote->rot_y);

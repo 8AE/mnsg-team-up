@@ -2,7 +2,7 @@
 
 Team Up is a mod for Mystical Ninja Starring Goemon: Recompiled. This repository is based on the MNSG recomp mod template and is configured to produce `mnsg_team_up.nrm`.
 
-The mod renders every unlocked character other than the currently controlled character as a cutscene-style companion. Goemon, Ebisumaru, Sasuke, and Yae use their clothed gameplay models and follow in a small formation behind the player.
+The mod renders every unlocked character other than the currently controlled character as a cutscene-style AI companion. Goemon, Ebisumaru, Sasuke, and Yae use their clothed gameplay models and independently follow behind the player.
 
 When the player changes character, Team Up preserves the selected companion's formation slot and rebinds that slot to the previous playable character. The handoff waits for the game's deferred character-load action (`0xBA`) to finish, avoiding a duplicate model during the transition.
 
@@ -13,7 +13,10 @@ Companions are visual followers, not additional playable actors. They do not rec
 - Character availability is read from the four 32-bit save fields at offsets `0x94`, `0x98`, `0x9C`, and `0xA0`.
 - Broad character resources and raw action-model files are staged from the gameplay stage-load hook.
 - Each follower is an independent kind-2 model object under a plain child task, matching the game's cutscene actor architecture.
-- Followers mirror the active player's action id, animation phase, and rotations while interpolating toward a 78-to-128-unit formation.
+- Each follower owns a `WALKING`/`RUNNING`/`JUMPING` state machine, movement speed, facing, and animation frame step.
+- Followers walk while close, run to catch up, and teleport into formation behind the player if they exceed the hard 50-unit leash.
+- Moving companions bind the game's real walking/running action clips; idle action `0` is used only after they settle.
+- During Player 1's complete airborne sequence, companions match the player's vertical displacement and normalized jump-animation phase with their own character clips.
 - The implementation is entirely C and uses no Python runtime or native library.
 
 See [docs/implementation.md](docs/implementation.md) for the Ghidra-backed model/resource path, lifecycle rules, and current render-only boundary.
