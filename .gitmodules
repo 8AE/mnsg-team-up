@@ -1,0 +1,6 @@
+[submodule "Goemon64RecompSyms"]
+	path = Goemon64RecompSyms
+	url = https://github.com/klorfmorf/Goemon64RecompSyms/
+[submodule "mnsg"]
+	path = mnsg
+	url = https://github.com/klorfmorf/mnsg
