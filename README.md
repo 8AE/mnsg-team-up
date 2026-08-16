@@ -1,6 +1,6 @@
-# Mystical Ninja Starring Goemon: Recompiled Mod Template
+# Team Up
 
-This is an example mod for Majora's Mask: Recompiled that can be used as a template for creating mods. It has a basic build system, headers, sample code, and a mod config toml.
+Team Up is a mod for Mystical Ninja Starring Goemon: Recompiled. This repository is based on the MNSG recomp mod template and is configured to produce `mnsg_team_up.nrm`.
 
 Example code for using the recompui API to build ingame UI can be found in the `ui-example` branch.
 
@@ -8,7 +8,7 @@ Example code for using the recompui API to build ingame UI can be found in the `
 See [this document](https://hackmd.io/fMDiGEJ9TBSjomuZZOgzNg) for an explanation of the modding framework, including how to write function patches and perform interop between different mods.
 
 ### Tools
-You'll need to install `clang` and `make` to build this template.
+You'll need to install `clang` and `make` to build this mod.
 * On Windows, using [chocolatey](https://chocolatey.org/) to install both is recommended. The packages are `llvm` and `make` respectively.
   * The LLVM 19.1.0 [llvm-project](https://github.com/llvm/llvm-project) release binary, which is also what chocolatey provides, does not support MIPS correctly. The solution is to install 18.1.8 instead, which can be done in chocolatey by specifying `--version 18.1.8` or by downloading the 18.1.8 release directly.
 * On Linux, these can both be installed using your distro's package manager. You may also need to install your distro's package for the `lld` linker. On Debian/Ubuntu based distros this will be the `lld` package.
@@ -19,10 +19,22 @@ On Linux and MacOS, you'll need to also ensure that you have the `zip` utility i
 You'll also need to grab a build of the `RecompModTool` utility from the releases of [N64Recomp](https://github.com/N64Recomp/N64Recomp). You can also build it yourself from that repo if desired.
 
 ### Building
-* First, run `make` (with an optional job count) to build the mod code itself.
-* Next, run the `RecompModTool` utility with `mod.toml` as the first argument and the build dir (`build` in the case of this template) as the second argument.
-  * This will produce your mod's `.nrm` file in the build folder.
-  * If you're on MacOS, you may need to specify the path to the `clang` and `ld.lld` binaries using the `CC` and `LD` environment variables, respectively.
+
+On macOS, install the build dependencies with Homebrew:
+
+```sh
+brew install llvm lld make
+```
+
+Place a macOS build of `RecompModTool` in the repository root, put it on your `PATH`, or set `RECOMP_MOD_TOOL` to its path. This checkout also reuses `../mnsg-recomp-example/RecompModTool` when that configured sibling repository is present.
+
+Build the complete `.nrm` package with:
+
+```sh
+./build_mod.sh -j4
+```
+
+The script selects Homebrew's MIPS-capable LLVM toolchain, compiles the mod, packages it, and writes `build/mnsg_team_up.nrm`.
 
 ### Updating the Mystical Ninja Starring Goemon Decompilation Submodule
 Mods can also be made with newer versions of the Mystical Ninja Starring Goemon decompilation instead of the commit targeted by this repo's submodule.
